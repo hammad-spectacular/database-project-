@@ -1,0 +1,305 @@
+-- ============================================================
+--  AIRLINE RESERVATION SYSTEM — Full SQL Project
+--  Covers: Labs 01, 02, 04, 05, 06, 07, 08, 09, 11, 12
+-- ============================================================
+
+
+-- ============================================================
+--  STEP 1: CLEAN SLATE
+-- ============================================================
+
+DROP TABLE IF EXISTS BOOKING;
+DROP TABLE IF EXISTS FLIGHT;
+DROP TABLE IF EXISTS PASSENGER;
+DROP TABLE IF EXISTS AIRCRAFT;
+DROP TABLE IF EXISTS STAFF;
+
+
+-- ============================================================
+--  STEP 2: CREATE TABLES (Lab 01 & 02 — DDL)
+-- ============================================================
+
+CREATE TABLE AIRCRAFT (
+    aircraft_id     NUMBER(5)       PRIMARY KEY,
+    model           VARCHAR2(100)   NOT NULL,
+    manufacturer    VARCHAR2(100),
+    total_seats     NUMBER(4),
+    status          VARCHAR2(20)    DEFAULT 'Active'
+);
+
+CREATE TABLE STAFF (
+    staff_id        NUMBER(5)       PRIMARY KEY,
+    name            VARCHAR2(100)   NOT NULL,
+    role            VARCHAR2(50),
+    nationality     VARCHAR2(50),
+    salary          NUMBER(10,2),
+    hire_date       DATE
+);
+
+CREATE TABLE PASSENGER (
+    passenger_id    NUMBER(5)       PRIMARY KEY,
+    name            VARCHAR2(100)   NOT NULL,
+    passport_no     VARCHAR2(20)    UNIQUE,
+    nationality     VARCHAR2(50),
+    dob             DATE,
+    contact         VARCHAR2(20)
+);
+
+CREATE TABLE FLIGHT (
+    flight_id       NUMBER(5)       PRIMARY KEY,
+    flight_no       VARCHAR2(10)    NOT NULL,
+    aircraft_id     NUMBER(5),
+    pilot_id        NUMBER(5),
+    origin          VARCHAR2(100),
+    destination     VARCHAR2(100),
+    departure       DATE,
+    arrival         DATE,
+    base_fare       NUMBER(10,2),
+    status          VARCHAR2(20)    DEFAULT 'Scheduled',
+    CONSTRAINT fk_flight_aircraft FOREIGN KEY (aircraft_id) REFERENCES AIRCRAFT(aircraft_id),
+    CONSTRAINT fk_flight_pilot    FOREIGN KEY (pilot_id)    REFERENCES STAFF(staff_id)
+);
+
+CREATE TABLE BOOKING (
+    booking_id      NUMBER(5)       PRIMARY KEY,
+    passenger_id    NUMBER(5),
+    flight_id       NUMBER(5),
+    seat_no         VARCHAR2(5),
+    class           VARCHAR2(20),
+    fare_paid       NUMBER(10,2),
+    booking_date    DATE,
+    status          VARCHAR2(20)    DEFAULT 'Confirmed',
+    CONSTRAINT fk_booking_passenger FOREIGN KEY (passenger_id) REFERENCES PASSENGER(passenger_id),
+    CONSTRAINT fk_booking_flight    FOREIGN KEY (flight_id)    REFERENCES FLIGHT(flight_id)
+);
+
+
+-- ============================================================
+--  STEP 3: ALTER TABLE (Lab 08 — Schema Modification)
+-- ============================================================
+
+-- Add loyalty miles column to PASSENGER
+ALTER TABLE PASSENGER ADD loyalty_miles NUMBER(8) DEFAULT 0;
+
+-- Add email to STAFF
+ALTER TABLE STAFF ADD email VARCHAR2(100);
+
+-- Add luggage allowance to BOOKING
+ALTER TABLE BOOKING ADD luggage_kg NUMBER(4) DEFAULT 23;
+
+
+-- ============================================================
+--  STEP 4: INSERT DATA (Lab 11 — DML)
+-- ============================================================
+
+-- AIRCRAFT
+INSERT INTO AIRCRAFT VALUES (1, 'Boeing 737',   'Boeing',  180, 'Active');
+INSERT INTO AIRCRAFT VALUES (2, 'Airbus A320',  'Airbus',  150, 'Active');
+INSERT INTO AIRCRAFT VALUES (3, 'Boeing 777',   'Boeing',  396, 'Active');
+INSERT INTO AIRCRAFT VALUES (4, 'ATR 72',       'ATR',      70, 'Maintenance');
+INSERT INTO AIRCRAFT VALUES (5, 'Airbus A380',  'Airbus',  555, 'Active');
+
+-- STAFF
+INSERT INTO STAFF VALUES (1, 'Capt. Salman Akhtar',  'Pilot',         'Pakistani',  350000, DATE '2010-04-01', 'salman@airline.pk');
+INSERT INTO STAFF VALUES (2, 'Capt. Zara Hussain',   'Pilot',         'Pakistani',  320000, DATE '2012-09-15', 'zara@airline.pk');
+INSERT INTO STAFF VALUES (3, 'Hina Baig',             'Cabin Crew',    'Pakistani',   75000, DATE '2018-06-01', 'hina@airline.pk');
+INSERT INTO STAFF VALUES (4, 'Capt. James Moore',     'Pilot',         'British',    380000, DATE '2008-11-20', 'james@airline.pk');
+INSERT INTO STAFF VALUES (5, 'Admin Tariq Shah',      'Ground Staff',  'Pakistani',   55000, DATE '2020-03-10', 'tariq@airline.pk');
+
+-- PASSENGER
+INSERT INTO PASSENGER VALUES (1, 'Ahmed Raza',    'PK-111111', 'Pakistani', DATE '1990-03-14', '0300-1111111', 0);
+INSERT INTO PASSENGER VALUES (2, 'Sara Khan',     'PK-222222', 'Pakistani', DATE '1988-07-22', '0311-2222222', 1200);
+INSERT INTO PASSENGER VALUES (3, 'John Smith',    'GB-333333', 'British',   DATE '1975-11-05', '+447911123456', 500);
+INSERT INTO PASSENGER VALUES (4, 'Fatima Malik',  'PK-444444', 'Pakistani', DATE '1995-01-30', '0321-4444444', 3000);
+INSERT INTO PASSENGER VALUES (5, 'Ali Hassan',    'PK-555555', 'Pakistani', DATE '2000-06-18', '0333-5555555', 200);
+
+-- FLIGHT
+INSERT INTO FLIGHT VALUES (1, 'PK-301', 1, 1, 'Karachi',   'Lahore',    DATE '2024-02-01', DATE '2024-02-01', 15000, 'Completed');
+INSERT INTO FLIGHT VALUES (2, 'PK-502', 2, 2, 'Islamabad', 'Dubai',     DATE '2024-02-05', DATE '2024-02-05', 45000, 'Completed');
+INSERT INTO FLIGHT VALUES (3, 'PK-701', 3, 4, 'Lahore',    'London',    DATE '2024-02-10', DATE '2024-02-10', 95000, 'Completed');
+INSERT INTO FLIGHT VALUES (4, 'PK-401', 1, 1, 'Karachi',   'Islamabad', DATE '2024-03-01', DATE '2024-03-01', 12000, 'Scheduled');
+INSERT INTO FLIGHT VALUES (5, 'PK-601', 5, 2, 'Islamabad', 'New York',  DATE '2024-03-15', DATE '2024-03-16',150000, 'Scheduled');
+
+-- BOOKING
+INSERT INTO BOOKING VALUES (1, 1, 1, '12A', 'Economy',  15000, DATE '2024-01-20', 'Confirmed', 23);
+INSERT INTO BOOKING VALUES (2, 2, 2, '05B', 'Business', 75000, DATE '2024-01-25', 'Confirmed', 30);
+INSERT INTO BOOKING VALUES (3, 3, 3, '01A', 'First',   120000, DATE '2024-01-28', 'Confirmed', 40);
+INSERT INTO BOOKING VALUES (4, 4, 2, '14C', 'Economy',  45000, DATE '2024-01-26', 'Confirmed', 23);
+INSERT INTO BOOKING VALUES (5, 5, 4, '09D', 'Economy',  12000, DATE '2024-02-10', 'Confirmed', 23);
+
+
+-- ============================================================
+--  STEP 5: SELECT & FILTER QUERIES (Lab 04 & 07)
+-- ============================================================
+
+-- All flights
+SELECT * FROM FLIGHT;
+
+-- Flights from Islamabad only
+SELECT flight_no, destination, departure, base_fare
+FROM FLIGHT
+WHERE origin = 'Islamabad'
+ORDER BY departure;
+
+-- Passengers who are Pakistani
+SELECT name, passport_no, contact
+FROM PASSENGER
+WHERE nationality = 'Pakistani';
+
+-- Bookings in Business or First class
+SELECT * FROM BOOKING
+WHERE class IN ('Business', 'First')
+ORDER BY fare_paid DESC;
+
+-- Subquery — passengers who paid above average fare
+SELECT name FROM PASSENGER
+WHERE passenger_id IN (
+    SELECT passenger_id FROM BOOKING
+    WHERE fare_paid > (SELECT AVG(fare_paid) FROM BOOKING)
+);
+
+-- Subquery — pilots earning above average staff salary
+SELECT name, salary FROM STAFF
+WHERE salary > (SELECT AVG(salary) FROM STAFF)
+AND role = 'Pilot'
+ORDER BY salary DESC;
+
+
+-- ============================================================
+--  STEP 6: FUNCTIONS & AGGREGATION (Lab 05 & 06)
+-- ============================================================
+
+-- Single-row functions on STAFF
+SELECT
+    UPPER(name)                           AS name_upper,
+    LOWER(role)                           AS role_lower,
+    MONTHS_BETWEEN(SYSDATE, hire_date)    AS months_employed,
+    MOD(salary, 50000)                    AS salary_remainder
+FROM STAFF;
+
+-- Overall booking summary
+SELECT
+    COUNT(*)         AS total_bookings,
+    SUM(fare_paid)   AS total_revenue,
+    AVG(fare_paid)   AS avg_fare,
+    MAX(fare_paid)   AS highest_fare,
+    MIN(fare_paid)   AS lowest_fare
+FROM BOOKING;
+
+-- Revenue by class
+SELECT
+    class,
+    COUNT(*)         AS bookings,
+    SUM(fare_paid)   AS total_revenue,
+    AVG(fare_paid)   AS avg_fare
+FROM BOOKING
+GROUP BY class
+ORDER BY total_revenue DESC;
+
+-- Staff count and avg salary by role
+SELECT
+    role,
+    COUNT(*)         AS total,
+    AVG(salary)      AS avg_salary
+FROM STAFF
+GROUP BY role
+HAVING COUNT(*) >= 1;
+
+
+-- ============================================================
+--  STEP 7: JOINS (Lab 09)
+-- ============================================================
+
+-- Inner Join — flight with its aircraft details
+SELECT
+    f.flight_no,
+    f.origin,
+    f.destination,
+    a.model         AS aircraft,
+    a.total_seats,
+    f.departure
+FROM FLIGHT f
+INNER JOIN AIRCRAFT a ON f.aircraft_id = a.aircraft_id;
+
+-- Inner Join — complete booking report
+SELECT
+    p.name          AS passenger,
+    p.nationality,
+    f.flight_no,
+    f.origin,
+    f.destination,
+    b.class,
+    b.seat_no,
+    b.fare_paid,
+    b.status
+FROM BOOKING b
+INNER JOIN PASSENGER p ON b.passenger_id = p.passenger_id
+INNER JOIN FLIGHT    f ON b.flight_id    = f.flight_id
+ORDER BY f.departure;
+
+-- Full report — passenger, flight, aircraft and pilot in one query
+SELECT
+    p.name          AS passenger,
+    f.flight_no,
+    f.origin,
+    f.destination,
+    a.model         AS aircraft,
+    s.name          AS pilot,
+    b.class,
+    b.fare_paid
+FROM BOOKING b
+INNER JOIN PASSENGER p ON b.passenger_id = p.passenger_id
+INNER JOIN FLIGHT    f ON b.flight_id    = f.flight_id
+INNER JOIN AIRCRAFT  a ON f.aircraft_id  = a.aircraft_id
+INNER JOIN STAFF     s ON f.pilot_id     = s.staff_id;
+
+-- Left Join — all passengers even if no booking made
+SELECT
+    p.name          AS passenger,
+    b.flight_id,
+    b.fare_paid
+FROM PASSENGER p
+LEFT JOIN BOOKING b ON p.passenger_id = b.passenger_id;
+
+
+-- ============================================================
+--  STEP 8: UPDATE & DELETE (Lab 11 — DML)
+-- ============================================================
+
+-- Update flight status to Departed
+UPDATE FLIGHT SET status = 'Departed' WHERE flight_id = 4;
+
+-- Update passenger loyalty miles after a flight
+UPDATE PASSENGER SET loyalty_miles = loyalty_miles + 800 WHERE passenger_id = 1;
+
+-- Cancel a booking
+UPDATE BOOKING SET status = 'Cancelled' WHERE booking_id = 5;
+
+-- Delete a booking (commented out to preserve data)
+-- DELETE FROM BOOKING WHERE booking_id = 5;
+
+
+-- ============================================================
+--  STEP 9: SECURITY — USER & PRIVILEGES (Lab 12)
+-- ============================================================
+
+-- Create airline system user
+CREATE USER 'ARS_USER'@'localhost' IDENTIFIED BY 'ars_secure_2024';
+
+-- Grant appropriate access
+GRANT SELECT, INSERT ON airline.PASSENGER TO 'ARS_USER'@'localhost';
+GRANT SELECT, INSERT ON airline.BOOKING   TO 'ARS_USER'@'localhost';
+GRANT SELECT          ON airline.FLIGHT   TO 'ARS_USER'@'localhost';
+GRANT SELECT          ON airline.AIRCRAFT TO 'ARS_USER'@'localhost';
+GRANT SELECT          ON airline.STAFF    TO 'ARS_USER'@'localhost';
+
+-- Apply privileges
+FLUSH PRIVILEGES;
+
+-- Revoke example
+-- REVOKE INSERT ON airline.BOOKING FROM 'ARS_USER'@'localhost';
+
+
+-- ============================================================
+--  END OF AIRLINE RESERVATION SYSTEM SQL PROJECT
+-- ============================================================
